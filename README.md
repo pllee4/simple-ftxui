@@ -11,5 +11,5 @@ mkdir build
 cd build
 cmake ..
 make -j
-./bin/app-starter
+./bin/app_starter
 ```
