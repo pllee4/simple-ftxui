@@ -1,0 +1,2 @@
+add_subdirectory(tui_component)
+add_subdirectory(app)
