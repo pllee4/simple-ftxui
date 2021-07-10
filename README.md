@@ -13,3 +13,6 @@ cmake ..
 make -j
 ./bin/app_starter
 ```
+
+![image](https://user-images.githubusercontent.com/42335542/125155541-3cb6ff00-e193-11eb-85bd-f6199fd49024.png)
+
