@@ -19,7 +19,7 @@ if (${CMAKE_VERSION} VERSION_LESS 3.11)
 else()
 ## Fetch FTXUI
   include(FetchContent)
-
+  message(STATUS "Fetching content from online")
   set(FETCHCONTENT_UPDATES_DISCONNECTED TRUE)
   FetchContent_Declare(ftxui
     GIT_REPOSITORY https://github.com/ArthurSonzogni/ftxui
