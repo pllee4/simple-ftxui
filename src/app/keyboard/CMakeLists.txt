@@ -1,0 +1,3 @@
+add_executable(app_keyboard ${CMAKE_CURRENT_SOURCE_DIR}/keyboard.cpp)
+target_link_libraries(app_keyboard tui_component)
+set_target_properties(app_keyboard PROPERTIES CXX_STANDARD 17)
