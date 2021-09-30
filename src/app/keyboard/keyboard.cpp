@@ -7,6 +7,7 @@
 #include <ftxui/component/component.hpp>           // for Component
 #include <ftxui/component/screen_interactive.hpp>  // for ScreenInteractive
 #include <string>                                  // for allocator, operator+
+#include <thread>
 #include <utility>                                 // for move
 #include <vector>                                  // for vector
 
@@ -15,6 +16,14 @@
 #include "ftxui/screen/box.hpp"       // for ftxui
 
 using namespace ftxui;
+
+void TriggerRefresh(ScreenInteractive* screen) {
+  while (true) {
+    screen->PostEvent(Event::Custom);
+    using namespace std::chrono_literals;
+    std::this_thread::sleep_for(0.1s);
+  }
+}
 
 class DrawKey : public Component {
  public:
@@ -36,6 +45,7 @@ class DrawKey : public Component {
         children.push_back(text(L"Arrow Down"));
       }
     }
+    std::cout << "running" << std::endl;
     return window(text(L"keys"), vbox(std::move(children)));
   }
 
@@ -50,6 +60,9 @@ class DrawKey : public Component {
 
 int main(int argc, const char* argv[]) {
   auto screen = ScreenInteractive::TerminalOutput();
+
+  std::thread refresh_trigger_thread(TriggerRefresh, &screen);
+
   DrawKey draw_key;
   screen.Loop(&draw_key);
 }
