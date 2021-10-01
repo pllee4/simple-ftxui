@@ -8,8 +8,8 @@
 #include <ftxui/component/screen_interactive.hpp>  // for ScreenInteractive
 #include <string>                                  // for allocator, operator+
 #include <thread>
-#include <utility>                                 // for move
-#include <vector>                                  // for vector
+#include <utility>  // for move
+#include <vector>   // for vector
 
 #include "ftxui/component/event.hpp"  // for Event
 #include "ftxui/dom/elements.hpp"     // for text, vbox, window
@@ -31,31 +31,63 @@ class DrawKey : public Component {
 
   Element Render() override {
     Elements children;
-    for (size_t i = std::max(0, (int)keys.size() - 20); i < keys.size(); ++i) {
-      if (keys[i] == Event::ArrowLeft) {
-        children.push_back(text(L"Arrow Left"));
-      }
-      if (keys[i] == Event::ArrowRight) {
-        children.push_back(text(L"Arrow Right"));  
-      }
-      if (keys[i] == Event::ArrowUp) {
-        children.push_back(text(L"Arrow Up"));
-      }
-      if (keys[i] == Event::ArrowDown) {
-        children.push_back(text(L"Arrow Down"));
-      }
-    }
-    std::cout << "running" << std::endl;
+
+    float left_min = -0.3;
+    float left_max = 0;
+    float left_angular =
+        float((std::min(left_max, std::max(left_min, angular_)) - left_min)) /
+        float(left_max - left_min);
+
+    float right_min = 0;
+    float right_max = 0.3;
+
+    float right_angular =
+        float(
+            (std::min(right_max, std::max(right_min, angular_)) - right_min)) /
+        float(right_max - right_min);
+
+    Element angular_display =
+        hbox({gauge(left_angular) | color(Color::Yellow) | ftxui::inverted,
+              gauge(right_angular) | color(Color::Red)});
+
+    children.push_back(angular_display);
+    children.push_back(text(std::to_wstring(angular_)));
     return window(text(L"keys"), vbox(std::move(children)));
   }
 
   bool OnEvent(Event event) override {
-    keys.push_back(event);
-    return true;
+    if (event.character() == 'i') {
+      linear_ = 0.5;
+    } else if (event.character() == 'm') {
+      linear_ = -0.5;
+    }
+
+    if (event.character() == 'j') {
+      angular_ = 0.3;  // left
+      clear_angular_ = 0;
+    } else if (event.character() == 'l') {
+      angular_ = -0.3;  // right
+      clear_angular_ = 0;
+    } else {
+      if (clear_angular_++ > clear_angular_count_) {
+        clear_angular_ = 0;
+        angular_ = 0.0;
+      }
+    }
+
+    if (event.character() == 'k') {
+      linear_ = 0.0;
+      angular_ = 0.0;
+    }
+
+    return Component::OnEvent(event);
   }
 
  private:
-  std::vector<Event> keys;
+  float angular_{0.0};
+  float linear_{0.0};
+  uint16_t clear_angular_{0};
+  uint16_t clear_angular_count_{4};
 };
 
 int main(int argc, const char* argv[]) {
