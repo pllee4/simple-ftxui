@@ -25,6 +25,17 @@ void TriggerRefresh(ScreenInteractive* screen) {
   }
 }
 
+Element DoubleEndedHorizontalGauge(float min, float center, float max,
+                                   float progress, Color left_color,
+                                   Color right_color) {
+  float left = float((std::min(center, std::max(min, progress)) - min)) /
+               float(center - min);
+  float right = float((std::min(max, std::max(center, progress)) - center)) /
+                float(max - center);
+  return hbox({gauge(left) | color(left_color) | inverted,
+               gauge(right) | color(right_color)});
+}
+
 class DrawKey : public Component {
  public:
   ~DrawKey() override = default;
@@ -32,23 +43,8 @@ class DrawKey : public Component {
   Element Render() override {
     Elements children;
 
-    float left_min = -0.3;
-    float left_max = 0;
-    float left_angular =
-        float((std::min(left_max, std::max(left_min, angular_)) - left_min)) /
-        float(left_max - left_min);
-
-    float right_min = 0;
-    float right_max = 0.3;
-
-    float right_angular =
-        float(
-            (std::min(right_max, std::max(right_min, angular_)) - right_min)) /
-        float(right_max - right_min);
-
-    Element angular_display =
-        hbox({gauge(left_angular) | color(Color::Yellow) | ftxui::inverted,
-              gauge(right_angular) | color(Color::Red)});
+    Element angular_display = DoubleEndedHorizontalGauge(
+        -0.3, 0, 0.3, angular_, Color::Yellow, Color::Red);
 
     children.push_back(angular_display);
     children.push_back(text(std::to_wstring(angular_)));
