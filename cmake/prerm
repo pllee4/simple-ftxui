@@ -1,0 +1,9 @@
+#!/bin/bash
+path_to_purge="/opt/pllee4/bin"
+
+# Remove it from .bashrc
+sed -i "/^export ${path_to_purge}=/d" ~/.bashrc
+
+# unset it in the environment
+unset ${path_to_purge}
+unset path_to_purge
