@@ -1,0 +1,33 @@
+name: Release
+
+on:
+  push:
+    branches:
+      - release
+  pull_request:
+    branches:
+      - release
+  workflow_run:
+    workflows: ['Build']
+    branches:
+      - release
+    types: 
+      - completed
+
+jobs:
+  report:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Pack
+        run: mkdir build && cd build && cmake .. && cmake --build . && cpack
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v2
+        with: 
+          name: package
+          path: build/simple-ftxui_*.deb
+      - uses: actions/download-artifact@v2
+      - name: Download artifacts
+        run: |
+          export DEB_PKG=$(find . -type f -name "simple-ftxui_*.deb" -exec basename {} \;)
+          echo -e "Debian package found: ${DEB_PKG}"
