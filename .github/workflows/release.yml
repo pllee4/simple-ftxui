@@ -19,6 +19,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
+      - name: Update CMake
+        run: |
+          sudo apt-get install curl
+          curl -L https://github.com/Kitware/CMake/releases/download/v3.21.4/cmake-3.21.4-linux-x86_64.sh > cmake-3.21.4-Linux-x86_64.sh
+          chmod +x cmake-3.21.4-Linux-x86_64.sh
+          sudo bash ./cmake-3.21.4-Linux-x86_64.sh --prefix=/usr/local/ --skip-license && rm cmake-3.21.4-Linux-x86_64.sh
       - name: Pack
         run: mkdir build && cd build && cmake .. && cmake --build . && cpack
       - name: Upload artifacts
