@@ -2,8 +2,7 @@
 path_to_purge="/opt/pllee4/bin"
 
 # Remove it from .bashrc
-sed -i "/^export ${path_to_purge}=/d" ~/.bashrc
+sed -i '/export PATH=$PATH:\x2fopt\x2fpllee4\x2fbin/d' ~/.bashrc
 
 # unset it in the environment
-unset ${path_to_purge}
 unset path_to_purge
