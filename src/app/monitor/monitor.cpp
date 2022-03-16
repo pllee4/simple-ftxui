@@ -16,18 +16,22 @@
 using namespace ftxui;
 using namespace pllee4;
 
-void TriggerRefresh(ScreenInteractive* screen) {
-  while (true) {
-    screen->PostEvent(Event::Custom);
-    using namespace std::chrono_literals;
-    std::this_thread::sleep_for(0.1s);
-  }
-}
-
 int main(int argc, const char* argv[]) {
   auto screen = ScreenInteractive::Fullscreen();
-  std::thread refresh_trigger_thread(TriggerRefresh, &screen);
+  bool refresh_ui_continue = true;
   Window main_window;
-  screen.Loop(&main_window);
+
+  std::thread refresh_ui([&] {
+    while (refresh_ui_continue) {
+      using namespace std::chrono_literals;
+      std::this_thread::sleep_for(0.05s);
+      main_window.UpdateTicks();
+      screen.PostEvent(Event::Custom);
+    }
+  });
+
+  screen.Loop(main_window.RenderComponent());
+  refresh_ui_continue = false;
+  refresh_ui.join();
   return 0;
 }

@@ -2,28 +2,22 @@
 // Use of this source code is governed by the MIT license that can be found in
 // the LICENSE file.
 
-#include <stddef.h>                                // for size_t
-#include <algorithm>                               // for max
-#include <ftxui/component/component.hpp>           // for Component
-#include <ftxui/component/screen_interactive.hpp>  // for ScreenInteractive
-#include <string>                                  // for allocator, operator+
+#include <stddef.h>  // for size_t
+
+#include <algorithm>  // for max
+#include <string>     // for allocator, operator+
 #include <thread>
 #include <utility>  // for move
 #include <vector>   // for vector
 
-#include "ftxui/component/event.hpp"  // for Event
-#include "ftxui/dom/elements.hpp"     // for text, vbox, window
-#include "ftxui/screen/box.hpp"       // for ftxui
+#include "ftxui/component/captured_mouse.hpp"  // for ftxui
+#include "ftxui/component/component.hpp"       // for CatchEvent, Renderer
+#include "ftxui/component/event.hpp"           // for Event
+#include "ftxui/component/mouse.hpp"  // for Mouse, Mouse::Left, Mouse::Middle, Mouse::None, Mouse::Pressed, Mouse::Released, Mouse::Right, Mouse::WheelDown, Mouse::WheelUp
+#include "ftxui/component/screen_interactive.hpp"  // for ScreenInteractive
+#include "ftxui/dom/elements.hpp"  // for text, vbox, window, Element, Elements
 
 using namespace ftxui;
-
-void TriggerRefresh(ScreenInteractive* screen) {
-  while (true) {
-    screen->PostEvent(Event::Custom);
-    using namespace std::chrono_literals;
-    std::this_thread::sleep_for(0.1s);
-  }
-}
 
 Element DoubleEndedHorizontalGauge(float min, float center, float max,
                                    float progress, Color left_color,
@@ -36,32 +30,21 @@ Element DoubleEndedHorizontalGauge(float min, float center, float max,
                gauge(right) | color(right_color)});
 }
 
-class DrawKey : public Component {
+class DrawKey {
  public:
-  ~DrawKey() override = default;
+  DrawKey() = default;
 
-  Element Render() override {
-    Elements children;
-
-    Element angular_display = DoubleEndedHorizontalGauge(
-        -0.3, 0, 0.3, angular_, Color::Yellow, Color::Red);
-
-    children.push_back(angular_display);
-    children.push_back(text(std::to_wstring(angular_)));
-    return window(text(L"keys"), vbox(std::move(children)));
-  }
-
-  bool OnEvent(Event event) override {
-    if (event.character() == 'i') {
+  void OnEvent(Event event) {
+    if (event.character() == "i") {
       linear_ = 0.5;
-    } else if (event.character() == 'm') {
+    } else if (event.character() == "m") {
       linear_ = -0.5;
     }
 
-    if (event.character() == 'j') {
+    if (event.character() == "j") {
       angular_ = 0.3;  // left
       clear_angular_ = 0;
-    } else if (event.character() == 'l') {
+    } else if (event.character() == "l") {
       angular_ = -0.3;  // right
       clear_angular_ = 0;
     } else {
@@ -71,26 +54,45 @@ class DrawKey : public Component {
       }
     }
 
-    if (event.character() == 'k') {
+    if (event.character() == "k") {
       linear_ = 0.0;
       angular_ = 0.0;
     }
-
-    return Component::OnEvent(event);
   }
 
+  float GetAngular() const { return angular_; }
+
  private:
-  float angular_{0.0};
   float linear_{0.0};
+  float angular_{0.0};
   uint16_t clear_angular_{0};
-  uint16_t clear_angular_count_{4};
+  static constexpr uint16_t clear_angular_count_{4};
 };
 
 int main(int argc, const char* argv[]) {
   auto screen = ScreenInteractive::TerminalOutput();
 
-  std::thread refresh_trigger_thread(TriggerRefresh, &screen);
+  std::vector<Event> keys;
 
-  DrawKey draw_key;
-  screen.Loop(&draw_key);
+  DrawKey drawkey;
+  auto component = Renderer([&] {
+    Elements children;
+    for (size_t i = std::max(0, (int)keys.size() - 20); i < keys.size(); ++i) {
+      drawkey.OnEvent(keys[i]);
+    }
+
+    Element angular_display = DoubleEndedHorizontalGauge(
+        -0.3, 0, 0.3, drawkey.GetAngular(), Color::Yellow, Color::Red);
+
+    children.push_back(angular_display);
+    children.push_back(text(std::to_wstring(drawkey.GetAngular())));
+    return window(text(L"keys"), vbox(std::move(children)));
+  });
+
+  component = CatchEvent(component, [&](Event event) {
+    keys.push_back(event);
+    return true;
+  });
+
+  screen.Loop(component);
 }
