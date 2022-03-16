@@ -1,27 +1,29 @@
-/* 
+/*
  * window.hpp
  * Created on: May 30, 2021 17:24
- * Description: 
- * 
+ * Description:
+ *
  * Copyright (c) 2021 Pin Loon Lee (pllee4)
- */ 
- 
+ */
+
 #ifndef WINDOW_HPP
 #define WINDOW_HPP
 
 #include "ftxui/component/component.hpp"
-#include "ftxui/component/container.hpp"
 #include "ftxui/dom/elements.hpp"
 
 namespace pllee4 {
-class Window: public ftxui::Component {
-  public:
-    Window();
-    ftxui::Element Render() override;
-  private:
+class Window {
+ public:
+  Window() = default;
+  ftxui::Component RenderComponent();
+  void UpdateTicks() { ticks_++; };
+
+ private:
   // ui elements
-    ftxui::Container main_container = ftxui::Container::Horizontal();
+  int ticks_;
+  ftxui::Component main_container_ = ftxui::Container::Horizontal({});
 };
-} // namespace pllee4
+}  // namespace pllee4
 
 #endif /* WINDOW_HPP */
